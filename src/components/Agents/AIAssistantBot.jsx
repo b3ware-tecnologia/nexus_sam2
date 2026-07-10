@@ -1,54 +1,44 @@
 import React, { useState } from 'react';
 import { useSAM } from '../../context/SAMContext';
-import { Bot, X, Sparkles, AlertCircle, ArrowRight, User } from 'lucide-react';
+import { Bot, X, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 
 const AIAssistantBot = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [input, setInput] = useState('');
-  const { getComplianceStatus, getWastedSpend, installations, harvestLicense } = useSAM();
+  const { installations, harvestLicense } = useSAM();
   
-  // Local state for chat
   const [messages, setMessages] = useState([
-    { id: 1, sender: 'ai', type: 'text', text: "Hello Admin! I'm your Nexus AI. Type anything to trigger a real-time audit scan." }
+    { id: 1, sender: 'ai', type: 'text', text: "Hello Admin! I'm integrated directly to our physical Database now. Ask me to scan for harvesting!" }
   ]);
 
-  const idleCount = installations.filter(i => i.isIdle).length;
-  const wasted = getWastedSpend();
-  const compliance = getComplianceStatus();
-
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Add User Message
-    const newMsg = { id: Date.now(), sender: 'user', type: 'text', text: input };
-    setMessages(prev => [...prev, newMsg]);
+    // Enviar User Message
+    const userMsg = { id: Date.now(), sender: 'user', type: 'text', text: input };
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
 
-    // Simulate AI thinking and replying context-aware info
-    setTimeout(() => {
-      let aiResp = { id: Date.now() + 1, sender: 'ai', type: 'text' };
+    // Chamar Bot no Servidor
+    try {
+      const response = await fetch('http://localhost:3000/api/ai-chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: userMsg.text })
+      });
+      const aiData = await response.json();
       
-      if (idleCount > 0) {
-        aiResp.type = 'insight';
-        aiResp.insightData = {
-          title: 'Actionable Insight',
-          msg: `I noticed ${idleCount} underutilized installations.`,
-          savings: `$${wasted.toLocaleString()}/mo`
-        };
-      } else if (compliance < 100) {
-        aiResp.text = `Attention! The company's compliance stands at ${compliance}%. Check the True-Up Engine on the Renewals tab!`;
-      } else {
-        aiResp.text = `System is fully optimized! 100% Compliance and $0 wasted spend. Great job!`;
-      }
-
-      setMessages(prev => [...prev, aiResp]);
-    }, 800);
+      const aiMsg = { id: Date.now() + 1, sender: 'ai', type: aiData.type, text: aiData.text, insightData: aiData.data };
+      setMessages(prev => [...prev, aiMsg]);
+      
+    } catch (err) {
+      setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', type: 'text', text: 'Error: Cannot reach AI service on backend.' }]);
+    }
   };
 
   const handleHarvestAll = () => {
     installations.filter(i => i.isIdle).forEach(inst => harvestLicense(inst.id));
-    setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', type: 'text', text: "All idle licenses have been harvested successfully!" }]);
+    setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', type: 'text', text: "Harvesting global acionado. O Banco de Dados confirmou a remoção das instâncias ociosas!" }]);
   };
 
   if (!isOpen) {
@@ -98,7 +88,7 @@ const AIAssistantBot = () => {
                 <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5' }}>{m.text}</p>
               </div>
             )}
-            {m.type === 'insight' && (
+            {m.type === 'insight' && m.insightData && (
               <div style={{
                 background: 'var(--glass-bg)', border: '1px solid hsla(var(--color-accent-warning), 0.3)',
                 borderRadius: 'var(--radius-md)', padding: '16px'
@@ -109,7 +99,7 @@ const AIAssistantBot = () => {
                 </div>
                 <p className="text-muted" style={{ fontSize: '13px', margin: '0 0 12px 0' }}>{m.insightData.msg}</p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'hsl(var(--color-bg-primary))', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '12px' }}>Potential Savings:</span>
+                  <span style={{ fontSize: '12px' }}>Insight Type:</span>
                   <span style={{ color: 'hsl(var(--color-accent-success))', fontWeight: 'bold' }}>{m.insightData.savings}</span>
                 </div>
                 <button onClick={handleHarvestAll} style={{ width: '100%', marginTop: '12px', background: 'hsl(var(--color-accent-primary))', color: '#fff', border: 'none', padding: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
@@ -126,7 +116,7 @@ const AIAssistantBot = () => {
           display: 'flex', alignItems: 'center', background: 'hsl(var(--color-bg-primary))',
           borderRadius: 'var(--radius-full)', padding: '8px 16px', border: '1px solid var(--glass-border)'
         }}>
-          <input type="text" placeholder="Trigge AI scanning..." value={input} onChange={(e) => setInput(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '13px' }} />
+          <input type="text" placeholder="Scan Database via API..." value={input} onChange={(e) => setInput(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '13px' }} />
           <button type="submit" style={{ background: 'transparent', border: 'none', color: 'hsl(var(--color-accent-primary))', cursor: 'pointer', display: 'flex' }}>
             <ArrowRight size={18} />
           </button>

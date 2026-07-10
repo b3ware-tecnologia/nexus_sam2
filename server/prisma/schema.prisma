@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Device {
+  id            String         @id @default(uuid())
+  hostName      String
+  user          String
+  os            String
+  cores         Int            @default(4)
+  installations Installation[]
+}
+
+model SoftwareModel {
+  id           String         @id @default(uuid())
+  publisher    String
+  name         String
+  metric       String
+  entitlements Entitlement[]
+  installations Installation[]
+}
+
+model Entitlement {
+  id              String        @id @default(uuid())
+  rightsPurchased Int
+  unitCost        Float
+  expiration      String
+  softwareId      String
+  softwareModel   SoftwareModel @relation(fields: [softwareId], references: [id])
+}
+
+model Installation {
+  id            String        @id @default(uuid())
+  lastUsed      String
+  isIdle        Boolean       @default(false)
+  
+  softwareId    String
+  softwareModel SoftwareModel @relation(fields: [softwareId], references: [id])
+  
+  deviceId      String
+  device        Device        @relation(fields: [deviceId], references: [id])
+}
