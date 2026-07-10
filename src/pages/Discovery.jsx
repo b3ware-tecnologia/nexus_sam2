@@ -1,37 +1,39 @@
-import React from 'react';
-import { getStore } from '../mock/store';
-import { Monitor, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { useSAM } from '../context/SAMContext';
+import { Monitor, AlertCircle, Search, Scissors } from 'lucide-react';
 
 const Discovery = () => {
-  const store = getStore();
+  const { devices, installations, softwareModels, harvestLicense } = useSAM();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredInstallations = installations.filter(inst => {
+    const swName = softwareModels.find(s => s.id === inst.softwareId)?.name.toLowerCase() || '';
+    const devHost = devices.find(d => d.id === inst.deviceId)?.hostName.toLowerCase() || '';
+    const q = searchTerm.toLowerCase();
+    return swName.includes(q) || devHost.includes(q);
+  });
 
   return (
     <div className="glass-panel" style={{ padding: 'var(--space-lg)', minHeight: '600px' }}>
-      <div style={{ marginBottom: 'var(--space-xl)' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>Discovery & Installations</h2>
-        <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>Rastreio logico de máquinas e cruzamento com aplicativos instalados.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-xl)' }}>
+        <div>
+          <h2 style={{ margin: '0 0 8px 0' }}>Discovery & Installations</h2>
+          <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>Gerencie as instalações. Recolha (harvest) as ociosas para poupar custos.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--glass-bg)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
+          <Search size={18} className="text-muted" style={{ marginRight: '8px' }}/>
+          <input 
+            type="text" 
+            placeholder="Buscar software ou host..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+          />
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-xl)' }}>
-        {/* Dispositivos */}
-        <div style={{ flex: 1 }}>
-          <h3 className="text-accent" style={{ marginBottom: '16px', fontSize: '16px' }}>Hardware Inventory</h3>
-          {store.devices.map(dev => (
-            <div key={dev.id} style={{ 
-              background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', 
-              padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '8px',
-              display: 'flex', alignItems: 'center', gap: '12px'
-            }}>
-              <Monitor size={24} className="text-muted" />
-              <div>
-                <div style={{ fontWeight: '500' }}>{dev.hostName}</div>
-                <div className="text-muted" style={{ fontSize: '12px' }}>{dev.os} • User: {dev.user}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Instalações */}
+        {/* Instalações Filtradas */}
         <div style={{ flex: 2 }}>
           <h3 className="text-accent" style={{ marginBottom: '16px', fontSize: '16px' }}>Active Installations</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -41,12 +43,13 @@ const Discovery = () => {
                 <th style={{ padding: '12px' }}>Installed On</th>
                 <th style={{ padding: '12px' }}>Last Used</th>
                 <th style={{ padding: '12px' }}>Status</th>
+                <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {store.installations.map(inst => {
-                const dev = store.devices.find(d => d.id === inst.deviceId);
-                const sw = store.softwareModels.find(s => s.id === inst.softwareId);
+              {filteredInstallations.map(inst => {
+                const dev = devices.find(d => d.id === inst.deviceId);
+                const sw = softwareModels.find(s => s.id === inst.softwareId);
                 return (
                   <tr key={inst.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                     <td style={{ padding: '12px', fontWeight: '500' }}>{sw?.name}</td>
@@ -59,6 +62,21 @@ const Discovery = () => {
                         </span>
                       ) : (
                         <span style={{ color: 'hsl(var(--color-accent-success))', fontSize: '12px' }}>ACTIVE</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                      {inst.isIdle && (
+                        <button 
+                          onClick={() => harvestLicense(inst.id)}
+                          style={{
+                            background: 'hsla(var(--color-accent-warning), 0.2)',
+                            color: 'hsl(var(--color-accent-warning))',
+                            border: '1px solid hsla(var(--color-accent-warning), 0.5)',
+                            padding: '6px 12px', borderRadius: '4px', cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: '4px'
+                          }}>
+                          <Scissors size={14} /> Harvest
+                        </button>
                       )}
                     </td>
                   </tr>
