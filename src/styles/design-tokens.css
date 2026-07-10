@@ -1,0 +1,45 @@
+:root {
+  /* HSL Color Palette - Dark Premium Theme */
+  --color-bg-primary: 230 25% 10%; /* #131722 - Deep Midnight */
+  --color-bg-secondary: 230 20% 15%; /* #1e2230 */
+  --color-bg-tertiary: 230 20% 20%; 
+  
+  --color-accent-primary: 215 100% 65%; /* Electric Blue */
+  --color-accent-success: 140 100% 40%; /* Neon Green */
+  --color-accent-warning: 40 100% 60%; /* Vibrant Orange */
+  --color-accent-danger: 0 100% 65%; /* Alert Red */
+  
+  --color-text-primary: 0 0% 100%;
+  --color-text-secondary: 230 20% 70%;
+  --color-text-muted: 230 15% 50%;
+
+  /* Glassmorphism Variables */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(12px);
+
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 15px hsla(var(--color-accent-primary), 0.4);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
